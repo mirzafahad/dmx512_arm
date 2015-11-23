@@ -55,6 +55,13 @@ See 'main.c'
 #define PUSH_BUTTON  (*((volatile uint32_t *)(0x42000000 + (0x400253FC-0x40000000)*32 + 4*4)))
 
 
+#define TX_MODE 1
+#define RX_MODE 0
+//-----------------------------------------------------------------------------
+// Global Variable
+//-----------------------------------------------------------------------------
+
+
 
 
 //-----------------------------------------------------------------------------
@@ -112,10 +119,6 @@ void initHw()
 
     GPIO_PORTD_DIR_R = 0x00;  // bits 2,3 and 6 are inputs
     GPIO_PORTD_DEN_R = 0x4C;  // enable 2,3,6 buttons
-    //Not using D7 anymore
-    // Special case for D7-NMI pin (Non-maskable interrupt) and it is locked. The unlock sequences are:
-    //GPIO_PORTD_LOCK_R = 0x4C4F434B;
-    //GPIO_PORTD_CR_R |= 0xFF;  // Unlock D7 for PUR
     GPIO_PORTD_PUR_R = 0x4C;  // enable pull-up
 
     GPIO_PORTE_DIR_R = 0x00;  // bits 1,2 and 3 are inputs

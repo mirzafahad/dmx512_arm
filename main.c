@@ -74,28 +74,34 @@ int main(void)
 {
 	// Local variables
 	char buffer[6];
+	unsigned int deviceAdd;  			//***************** Not sure yet if this needs to be global***********//
+	int deviceMode;			//***************** Not sure yet if this needs to be global***********//
 
 
 	// Initialize hardware
 	initHw();
     initUart0();
 
-    // Step 1 *******************************************************
+    // Step 1
     RED_LED = 1;
     waitMicrosecond(250000);
     RED_LED = 0;
     waitMicrosecond(250000);
-    //waitPbPress();				// Wait for PB press
+    waitPbPress();				// Wait for PB press
 
 	// Display greeting
-    ltoa(readDevAdd(),buffer);
+    deviceAdd = readDevAdd();
+    deviceMode = readDevMode();
+    ltoa(deviceAdd,buffer);
     putsUart0("Device Address: ");
     putsUart0(buffer);
     putsUart0("\r\n");
+    (deviceMode == TX_MODE) ? putsUart0("Tx Mode\r\n"):putsUart0("Rx Mode\r\n");
 
 
     while(1)
     {
-    	getCmd();
+    	if(deviceMode == TX_MODE)
+    		getCmd();
     }
 }

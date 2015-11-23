@@ -46,7 +46,7 @@ Clock Rate	: 40 MHz using PLL
 #define DEV_ADD6  	 (*((volatile uint32_t *)(0x42000000 + (0x400073FC-0x40000000)*32 + 2*4))) //PD2
 #define DEV_ADD7  	 (*((volatile uint32_t *)(0x42000000 + (0x400073FC-0x40000000)*32 + 3*4))) //PD3
 #define DEV_ADD8  	 (*((volatile uint32_t *)(0x42000000 + (0x400073FC-0x40000000)*32 + 6*4))) //PD6
-#define DEV_ADD9  	 (*((volatile uint32_t *)(0x42000000 + (0x400063FC-0x40000000)*32 + 7*4))) //PC7
+#define DEV_MODE  	 (*((volatile uint32_t *)(0x42000000 + (0x400063FC-0x40000000)*32 + 7*4))) //PC7
 
 
 //-----------------------------------------------------------------------------
@@ -62,7 +62,7 @@ const char ready[] = "Ready\r\n";
 char inputStr[MAX_LENGTH+1];// +1 for NULL; To hold the user cmd
 int fieldCount;
 int maxDmxAddr = 512;		// Max Data slot for RS485
-int dmxOn = 1;				// RS485 On/Off
+int txOn = 1;				// RS485 On/Off
 unsigned char dmxData[513];
 
 
@@ -71,17 +71,29 @@ unsigned char dmxData[513];
 //-----------------------------------------------------------------------------
 
 //**********************************************//
-// Read the 10 pin dip switch as device address //
+// Read the 9 pin dip switch as device address //
 //**********************************************//
 unsigned int readDevAdd()
 {
 	unsigned int deviceAdd;
 
-	deviceAdd = DEV_ADD9<<9 |DEV_ADD8<<8 | DEV_ADD7<<7 | DEV_ADD6<<6 | DEV_ADD5<<5 | DEV_ADD4<<4 | DEV_ADD3<<3 | DEV_ADD2<<2 | DEV_ADD1<<1 | DEV_ADD0;
+	deviceAdd = DEV_ADD8<<8 | DEV_ADD7<<7 | DEV_ADD6<<6 | DEV_ADD5<<5 | DEV_ADD4<<4 | DEV_ADD3<<3 | DEV_ADD2<<2 | DEV_ADD1<<1 | DEV_ADD0;
 
-	deviceAdd = (~deviceAdd) & 0x3FF; // Pins are active low
+	deviceAdd = (~deviceAdd) & 0x1FF; // Pins are active low
 
 	return deviceAdd;
+}
+
+//******************************************//
+// Read the 10th dip switch for device mode //
+//******************************************//
+int readDevMode()
+{
+	int deviceMode;
+
+	deviceMode = (~DEV_MODE) & 0x1;
+
+	return deviceMode;
 }
 
 
@@ -150,11 +162,11 @@ void getCmd()
 			}
 			else if(isCmd("on",1))					// Is it a 'ON' cmd?
 			{
-				dmxOn = 1;							// Turn ON the DMX transmission.
+				txOn = 1;							// Turn ON the DMX transmission.
 			}
 			else if(isCmd("off",1))					// Is it a 'OFF' cmd?
 			{
-				dmxOn = 0;							// Turn OFF the DMX transmission.
+				txOn = 0;							// Turn OFF the DMX transmission.
 			}
 			else if(isCmd("poll",1))
 			{
@@ -169,11 +181,13 @@ void getCmd()
 		}
 		else
 		{
+			putsUart0("Bairer error");
 			invalidCmd = 1;							// parseStr return error!
 		}
 
 		if(invalidCmd)								// If the cmd is invalid send error msg.
 		{
+
 			putsUart0(errMsg);
 			invalidCmd = 0;
 		}

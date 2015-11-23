@@ -32,7 +32,8 @@ Devices used: UART
 
 extern unsigned char dmxData[513]; // Shared variable with main.c
 
-
+#define pollCode 0xF0				// Start code for POLL
+#define dataCode 0x00				// Start code for normal data
 
 //-----------------------------------------------------------------------------
 // Subroutines
@@ -40,6 +41,7 @@ extern unsigned char dmxData[513]; // Shared variable with main.c
 
 
 unsigned int readDevAdd();
+int readDevMode();
 int getInputChar(void);
 bool parseStr(int*, char*);
 int isCmd(char*, int);
