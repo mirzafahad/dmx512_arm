@@ -46,6 +46,7 @@ Clock Rate	: 40 MHz using PLL
 #define DEV_ADD6  	 (*((volatile uint32_t *)(0x42000000 + (0x400073FC-0x40000000)*32 + 2*4))) //PD2
 #define DEV_ADD7  	 (*((volatile uint32_t *)(0x42000000 + (0x400073FC-0x40000000)*32 + 3*4))) //PD3
 #define DEV_ADD8  	 (*((volatile uint32_t *)(0x42000000 + (0x400073FC-0x40000000)*32 + 6*4))) //PD6
+
 #define DEV_MODE  	 (*((volatile uint32_t *)(0x42000000 + (0x400063FC-0x40000000)*32 + 7*4))) //PC7
 
 
@@ -53,7 +54,7 @@ Clock Rate	: 40 MHz using PLL
 // Constant Arrays
 //-----------------------------------------------------------------------------
 const char errMsg[] = "Error. Type 'help'.\r\n";
-const char help[] = "\r\nCmds are case insensetive.\r\nAdr:1 to 512; data:0 to 255\r\n---------------------------\r\nset Adr data\r\nget Adr\r\nmax Adr\r\non\r\noff\r\npoll\r\nclear\r\n";
+const char help[] = "\r\nCmds are case insensitive.\r\nAdr:1 to 512; data:0 to 255\r\n---------------------------\r\nset Adr data\r\nget Adr\r\nmax Adr\r\non\r\noff\r\npoll\r\nclear\r\n";
 const char ready[] = "Ready\r\n";
 
 //-----------------------------------------------------------------------------

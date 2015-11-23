@@ -48,7 +48,7 @@ See 'main.c'
 //-----------------------------------------------------------------------------
 
 #include "tm4c123gh6pm.h"
-
+#include "dmx512.h"
 
 #define RED_LED      (*((volatile uint32_t *)(0x42000000 + (0x400253FC-0x40000000)*32 + 1*4)))
 #define GREEN_LED    (*((volatile uint32_t *)(0x42000000 + (0x400253FC-0x40000000)*32 + 3*4)))
@@ -60,7 +60,7 @@ See 'main.c'
 //-----------------------------------------------------------------------------
 // Global Variable
 //-----------------------------------------------------------------------------
-
+int txPhase;
 
 
 
@@ -113,8 +113,8 @@ void initHw()
     GPIO_PORTA_PUR_R = 0xC8;  // enable internal pull-up for push button
     GPIO_PORTA_AFSEL_R &= ~(0x08);  // By default PA3 act as SPI, revert back to GPIO
 
-    GPIO_PORTC_DIR_R = 0x00;  // bit 7 is input
-    GPIO_PORTC_DEN_R = 0x80;  // enable PC7 for push button
+    GPIO_PORTC_DIR_R = 0x40;  // bit 7 is input, bit 6 is output
+    GPIO_PORTC_DEN_R = 0xC0;  // enable PC7 (push button) and PC6 (DEN)
     GPIO_PORTC_PUR_R = 0x80;  // enable pull-up
 
     GPIO_PORTD_DIR_R = 0x00;  // bits 2,3 and 6 are inputs

@@ -30,10 +30,13 @@ Devices used: UART
 #define DMX512_H_
 
 
-extern unsigned char dmxData[513]; // Shared variable with main.c
+extern unsigned char dmxData[513];  // Shared variable with main.c
 
+#define DE  	 (*((volatile uint32_t *)(0x42000000 + (0x400063FC-0x40000000)*32 + 6*4))) //PC6
 #define pollCode 0xF0				// Start code for POLL
 #define dataCode 0x00				// Start code for normal data
+
+
 
 //-----------------------------------------------------------------------------
 // Subroutines

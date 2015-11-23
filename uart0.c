@@ -1,12 +1,12 @@
 /*
  * uart.c
  *
- *  Created on: Oct 19, 2015
- *      Author: Fahad Mirza
+ *  Created on: October 19, 2015
+ *  Revised on: 23rd November, 2015
+ *  Author: Fahad Mirza (fahadmirza80@yahoo.com)
  */
 
 #include <stdint.h>
-#include <stdbool.h>
 #include <string.h>
 #include "tm4c123gh6pm.h"
 #include "uart0.h"
@@ -23,7 +23,7 @@ void initUart0()
 	SYSCTL_RCGCUART_R |= SYSCTL_RCGCUART_R0;         // turn-on UART0, leave other uarts in same status
     GPIO_PORTA_DEN_R |= 3;                           // default, added for clarity
 	GPIO_PORTA_AFSEL_R |= 3;                         // default, added for clarity
-    GPIO_PORTA_PCTL_R = GPIO_PCTL_PA1_U0TX | GPIO_PCTL_PA0_U0RX;
+    GPIO_PORTA_PCTL_R |= GPIO_PCTL_PA1_U0TX | GPIO_PCTL_PA0_U0RX;
 
    	// Configure UART0 to 115200 baud, 8N1 format (must be 3 clocks from clock enable and config writes)
     UART0_CTL_R = 0;                                 // turn-off UART0 to allow safe programming

@@ -1,10 +1,10 @@
-/*! \file uart0.h \brief UART0 functions. */
+/*! \file uart1.h \brief UART0 functions. */
 //*****************************************************************************
 /*
-UART0 functions
+UART1 functions
 
 All rights reserved @
-Fahad Mirza (fahadmirza80@yahoo.com)
+Fahad Mirza (fahad.mirza34@mavs.uta.edu)
 
 
 Course Project (Fall 2015)
@@ -16,22 +16,23 @@ University of Texas at Arlington
 -----------------------------------------------------------------------------
 Notes
 -----------------------------------------------------------------------------
-File Name	: 'uart0.h'
-Created		: 19th October, 2015
+File Name	: 'uart1.h'
+Created		: 23rd November, 2015
 Revised		: 23rd November, 2015
 Version		: 1.0
 Target uC	: TM4C123GH6PM
 Clock Source: 16 MHz primary oscillator
 Clock Rate	: 40 MHz using PLL
-Devices used: UART0
+Devices used: UART1
 */
 
-#ifndef UART0_H_
-#define UART0_H_
+#ifndef UART1_H_
+#define UART1_H_
 
-void initUart0();
-void putcUart0(char);
-void putsUart0(const char*);
-char getcUart0();
+void initUart1();
+void putcUart1(char);
+void putsUart1(const char*);
+char getcUart1();
 
-#endif /* UART0_H_ */
+
+#endif /* UART1_H_ */
