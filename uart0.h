@@ -31,7 +31,7 @@ Devices used: UART
 
 void initUart0();
 void putcUart0(char);
-void putsUart0(char*);
+void putsUart0(const char*);
 char getcUart0();
 
 #endif /* UART0_H_ */

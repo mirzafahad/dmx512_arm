@@ -42,7 +42,7 @@ void putcUart0(char c)
 }
 
 // Blocking function that writes a string when the UART buffer is not full
-void putsUart0(char* str)
+void putsUart0(const char* str)
 {
 	int i;
     for (i = 0; i < strlen(str); i++)

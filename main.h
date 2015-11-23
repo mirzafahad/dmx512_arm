@@ -61,15 +61,18 @@ See 'main.c'
 // Subroutines
 //-----------------------------------------------------------------------------
 
-// Blocking function that returns only when SW1 is pressed
+//*********************************************************//
+// Blocking function that returns only when SW1 is pressed //
+//*********************************************************//
 void waitPbPress()
 {
 	while(PUSH_BUTTON);
 }
 
-
-// Approximate busy waiting (in units of microseconds), given a 40 MHz system clock
-void waitMicrosecond(unsigned int us)
+//**********************************************************************************//
+// Approximate busy waiting (in units of microseconds), given a 40 MHz system clock //
+//**********************************************************************************//
+void waitMicrosecond(uint32_t us)
 {
 	                                            // Approx clocks per us
 	__asm("WMS_LOOP0:   MOV  R1, #6");          // 1
@@ -94,8 +97,8 @@ void initHw()
     // Note UART on port A must use APB
     SYSCTL_GPIOHBCTL_R = 0;
 
-    // Enable GPIO port A,D,E and F.
-    SYSCTL_RCGC2_R = SYSCTL_RCGC2_GPIOA | SYSCTL_RCGC2_GPIOD | SYSCTL_RCGC2_GPIOE | SYSCTL_RCGC2_GPIOF;
+    // Enable GPIO port A,C,D,E and F.
+    SYSCTL_RCGC2_R = SYSCTL_RCGC2_GPIOA | SYSCTL_RCGC2_GPIOC | SYSCTL_RCGC2_GPIOD | SYSCTL_RCGC2_GPIOE | SYSCTL_RCGC2_GPIOF;
 
     // Configure LED and pushbutton pins
     GPIO_PORTA_DIR_R = 0x00;  // bits 3,6 and 7 are inputs
@@ -103,13 +106,17 @@ void initHw()
     GPIO_PORTA_PUR_R = 0xC8;  // enable internal pull-up for push button
     GPIO_PORTA_AFSEL_R &= ~(0x08);  // By default PA3 act as SPI, revert back to GPIO
 
+    GPIO_PORTC_DIR_R = 0x00;  // bit 7 is input
+    GPIO_PORTC_DEN_R = 0x80;  // enable PC7 for push button
+    GPIO_PORTC_PUR_R = 0x80;  // enable pull-up
 
-    GPIO_PORTD_DIR_R = 0x00;  // bits 2,3,6 and 7 are inputs
-    GPIO_PORTD_DEN_R = 0xCC;  // enable 2,3,6,7 buttons
+    GPIO_PORTD_DIR_R = 0x00;  // bits 2,3 and 6 are inputs
+    GPIO_PORTD_DEN_R = 0x4C;  // enable 2,3,6 buttons
+    //Not using D7 anymore
     // Special case for D7-NMI pin (Non-maskable interrupt) and it is locked. The unlock sequences are:
-    GPIO_PORTD_LOCK_R = 0x4C4F434B;
-    GPIO_PORTD_CR_R |= 0xFF;  // Unlock D7 for PUR
-    GPIO_PORTD_PUR_R = 0xCC;  // enable pull-up
+    //GPIO_PORTD_LOCK_R = 0x4C4F434B;
+    //GPIO_PORTD_CR_R |= 0xFF;  // Unlock D7 for PUR
+    GPIO_PORTD_PUR_R = 0x4C;  // enable pull-up
 
     GPIO_PORTE_DIR_R = 0x00;  // bits 1,2 and 3 are inputs
     GPIO_PORTE_DEN_R = 0x0E;  // enable 1,2,3 push buttons

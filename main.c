@@ -60,6 +60,11 @@ UART Interface:
 #include "dmx512.h"
 #include "main.h"
 
+//-----------------------------------------------------------------------------
+// Global Variable
+//-----------------------------------------------------------------------------
+//extern unsigned char dmxData[513];			// RS485 Buffer
+
 
 //-----------------------------------------------------------------------------
 // Main
@@ -69,19 +74,18 @@ int main(void)
 {
 	// Local variables
 	char buffer[6];
-	char inputStr[MAX_LENGTH+1]; // +1 for NULL
+
 
 	// Initialize hardware
 	initHw();
     initUart0();
-    waitPbPress();				// Wait for PB press
 
     // Step 1 *******************************************************
     RED_LED = 1;
     waitMicrosecond(250000);
     RED_LED = 0;
     waitMicrosecond(250000);
-
+    //waitPbPress();				// Wait for PB press
 
 	// Display greeting
     ltoa(readDevAdd(),buffer);
@@ -89,9 +93,9 @@ int main(void)
     putsUart0(buffer);
     putsUart0("\r\n");
 
+
     while(1)
     {
-    	getCmd(inputStr);
-
+    	getCmd();
     }
 }
