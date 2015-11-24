@@ -24,6 +24,8 @@ Devices used: UART1
 #include "tm4c123gh6pm.h"
 #include "uart1.h"
 
+
+
 //-----------------------------------------------------------------------------
 // Subroutines
 //-----------------------------------------------------------------------------
@@ -41,14 +43,27 @@ void initUart1()
    	// Configure UART0 to 115200 baud, 8N2 format
     UART1_CTL_R = 0;                                 // turn-off UART1 to allow safe programming
 	UART1_CC_R = UART_CC_CS_SYSCLK;                  // use system clock (40 MHz)
-    UART1_IBRD_R = 10;                               // r = 40 MHz / (Nx250kHz) = 10, where N=16
+    UART1_IBRD_R = 10;                               // 250Kbps  Math: r = 40 MHz / (Nx250kHz) = 10, where N=16
     UART1_FBRD_R = 00;                               // No fraction
     UART1_LCRH_R = UART_LCRH_WLEN_8 | UART_LCRH_STP2;// configure for 8N2 w/ 1-level FIFO
     UART1_CTL_R = UART_CTL_TXE | UART_CTL_RXE | UART_CTL_UARTEN; // enable TX, RX, and module
 
     //Configure Tx Interrupt
-    UART1_IM_R = UART_IM_TXIM;                       // turn-on TX interrupt
+    //UART1_IM_R = UART_IM_TXIM;					 // Used in separate function
+    UART1_ICR_R = 0x17F2;;
     NVIC_EN0_R |= 1 << (INT_UART1-16);               // turn-on interrupt 22 (UART1)
+}
+
+//Enable Tx Interrupt
+void enableU1TxINT()
+{
+	UART1_IM_R = UART_IM_TXIM;            // turn-on U1TX interrupt
+}
+
+//Disable Tx Interrupt
+void disableU1TxINT()
+{
+	UART1_IM_R = 0;                       // turn-off TX interrupt
 }
 
 // Blocking function that writes a serial character when the UART buffer is not full
@@ -72,3 +87,4 @@ char getcUart1()
 	while (UART1_FR_R & UART_FR_RXFE);
 	return UART1_DR_R & 0xFF;
 }
+

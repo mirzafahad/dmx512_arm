@@ -57,12 +57,13 @@ UART Interface:
 #include <string.h>
 #include "tm4c123gh6pm.h"
 #include "uart0.h"
+#include "uart1.h"
 #include "main.h"
 
 //-----------------------------------------------------------------------------
 // Global Variable
 //-----------------------------------------------------------------------------
-//extern unsigned char dmxData[513];			// RS485 Buffer
+
 
 
 
@@ -72,6 +73,20 @@ UART Interface:
 //-----------------------------------------------------------------------------
 void Uart1Isr()
 {
+	U1TxINTflag = 1; 						// Clear the flag
+	if(txPhase == 0)
+	{
+		brkFunc();
+	}
+	else if(txPhase == 1)
+	{
+		sendStartByte(dataStartByte);
+	}
+	else
+	{
+		putcUart1(dmxData[txPhase-1]);
+	}
+	txPhase = (txPhase+1)%(maxDmxAddr+2);
 
 }
 
@@ -84,12 +99,14 @@ int main(void)
 	// Local variables
 	char buffer[6];
 	unsigned int deviceAdd;  			//***************** Not sure yet if this needs to be global***********//
-	int deviceMode;			//***************** Not sure yet if this needs to be global***********//
+	int deviceMode;						//***************** Not sure yet if this needs to be global***********//
 
 
 	// Initialize hardware
 	initHw();
     initUart0();
+    initUart1();
+    clrDmxData();
 
     // Step 1
     RED_LED = 1;
@@ -98,19 +115,31 @@ int main(void)
     waitMicrosecond(250000);
     waitPbPress();				// Wait for PB press
 
+
+
+
 	// Display greeting
     deviceAdd = readDevAdd();
     deviceMode = readDevMode();
     ltoa(deviceAdd,buffer);
-    putsUart0("Device Address: ");
-    putsUart0(buffer);
-    putsUart0("\r\n");
-    (deviceMode == TX_MODE) ? putsUart0("Tx Mode\r\n"):putsUart0("Rx Mode\r\n");
+    putsUart0("Device Address: ");  putsUart0(buffer);  putsUart0("\r\n");
+    if(deviceMode == TX_MODE)
+    {
+    	dmxTxDE = 1;
+    	txPhase = 1;
+    	putsUart0("Tx Mode\r\n");
+    	enableU1TxINT();
+    	brkFunc();
+    }
+    else
+    	putsUart0("Rx Mode\r\n");
 
 
     while(1)
     {
     	if(deviceMode == TX_MODE)
+    	{
     		getCmd();
+    	}
     }
 }

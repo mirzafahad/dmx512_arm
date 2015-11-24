@@ -30,6 +30,7 @@ Clock Rate	: 40 MHz using PLL
 #include <string.h>
 #include <ctype.h>
 #include "uart0.h"
+#include "uart1.h"
 #include "dmx512.h"
 #include "tm4c123gh6pm.h"
 
@@ -49,23 +50,28 @@ Clock Rate	: 40 MHz using PLL
 
 #define DEV_MODE  	 (*((volatile uint32_t *)(0x42000000 + (0x400063FC-0x40000000)*32 + 7*4))) //PC7
 
+#define U1TxINTflag  (*((volatile uint32_t *)(0x42000000 + (0x4000D044-0x40000000)*32 + 5*4))) //UART Interrupt Clear (UARTICR TXIC bit)
+#define U1TXBUSY 	 (*((volatile uint32_t *)(0x42000000 + (0x4000D018-0x40000000)*32 + 3*4))) //UART Flag register's bit 3 (Tx Busy)
+
+#define dmxTxDE  	 (*((volatile uint32_t *)(0x42000000 + (0x400063FC-0x40000000)*32 + 6*4))) //PC6 ->RX485 Tx Enable pin
+
 
 //-----------------------------------------------------------------------------
 // Constant Arrays
 //-----------------------------------------------------------------------------
 const char errMsg[] = "Error. Type 'help'.\r\n";
-const char help[] = "\r\nCmds are case insensitive.\r\nAdr:1 to 512; data:0 to 255\r\n---------------------------\r\nset Adr data\r\nget Adr\r\nmax Adr\r\non\r\noff\r\npoll\r\nclear\r\n";
-const char ready[] = "Ready\r\n";
+const char help[] 	= "\r\nCmds are case insensitive.\r\nAdr:1 to 512; data:0 to 255\r\n---------------------------\r\nset Adr data\r\nget Adr\r\nmax Adr\r\non\r\noff\r\npoll\r\nclear\r\n";
+const char ready[]	= "Ready\r\n";
 
 //-----------------------------------------------------------------------------
 // Global Variables
 //-----------------------------------------------------------------------------
+int txPhase;
 char inputStr[MAX_LENGTH+1];// +1 for NULL; To hold the user cmd
-int fieldCount;
-int maxDmxAddr = 512;		// Max Data slot for RS485
-int txOn = 1;				// RS485 On/Off
 unsigned char dmxData[513];
-
+int fieldCount;
+int maxDmxAddr = 1;			// Max Data slot for RS485
+bool txOn = true;			// RS485 On/Off
 
 //-----------------------------------------------------------------------------
 // Subroutines
@@ -103,20 +109,21 @@ int readDevMode()
 //**************************************//
 void getCmd()
 {
-	if(getInputChar())					// Get character form UART0. If it is CR then go to next step.
+	if(getInputChar())								// Get character form UART0. If it is CR then go to next step.
 	{
-		int invalidCmd=0;				// Flag for invalid cmd
+
+		int invalidCmd=0;							// Flag for invalid cmd
 
 		if(DEBUG){ putsUart0(inputStr); putsUart0("\r\n"); }
 
 		int pos[4];
 		char type[4];
 
-		if(parseStr(pos, type)) 		// If parsing is successful, then execute the cmd
+		if(parseStr(pos, type)) 					// If parsing is successful, then execute the cmd
 		{
 			int addr, data;
 
-			if(isCmd("set",3))			// Is it 'SET'?
+			if(isCmd("set",3))						// Is it 'SET'?
 			{
 				if(type[1]=='n' && type[2]=='n')	// Are both of the parameters number?
 				{
@@ -129,7 +136,7 @@ void getCmd()
 				}
 				else invalidCmd = 1;				// Both parameters aren't number. Error.
 			}
-			else if(isCmd("get",2))		// Is it 'GET' cmd?
+			else if(isCmd("get",2))					// Is it 'GET' cmd?
 			{
 				if(type[1]=='n')					// Is the parameter a number?
 				{
@@ -163,11 +170,13 @@ void getCmd()
 			}
 			else if(isCmd("on",1))					// Is it a 'ON' cmd?
 			{
-				txOn = 1;							// Turn ON the DMX transmission.
+				txOn = true;						// Turn ON the DMX transmission.
+				enableU1TxINT();					// Maybe I should call brkfunc() to avoid any issue in future**********************************************
 			}
 			else if(isCmd("off",1))					// Is it a 'OFF' cmd?
 			{
-				txOn = 0;							// Turn OFF the DMX transmission.
+				txOn = false;						// Maybe I should set txPhase to 1 and clear the flag to make things error prone proof*************************
+				disableU1TxINT();					// Turn OFF the DMX transmission.
 			}
 			else if(isCmd("poll",1))
 			{
@@ -182,13 +191,11 @@ void getCmd()
 		}
 		else
 		{
-			putsUart0("Bairer error");
 			invalidCmd = 1;							// parseStr return error!
 		}
 
 		if(invalidCmd)								// If the cmd is invalid send error msg.
 		{
-
 			putsUart0(errMsg);
 			invalidCmd = 0;
 		}
@@ -318,9 +325,54 @@ int getArgNum(int index)
 void clrDmxData()
 {
 	int i;
-	for(i=0;i<513;i++)
+	for(i=1;i<513;i++)
 	{
 		dmxData[i] = 0;
 	}
 }
 
+
+
+
+//*******************************//
+// DMX Break generation function //
+//*******************************//
+void brkFunc()
+{
+	while(U1TXBUSY);				// Wait till Tx FIFO is empty
+
+	UART1_IBRD_R = 30;              // Slow the Baud Rate
+	UART1_FBRD_R = 00;              // 83.33Kbps  Math: r = 40 MHz / (Nx83.33kHz) = 30, where N=16 and No fraction
+	UART1_LCRH_R = UART_LCRH_WLEN_8 | UART_LCRH_STP2;  // According to datasheet everytime we change baudrate we must write to LCRH //configure for 8N2 w/ 1-level FIFO
+	putcUart1(0);					// Sending Break and MAB
+}
+
+//********************************//
+// Start Byte generation function //
+//********************************//
+void sendStartByte(char startByte)
+{
+	while(U1TXBUSY);			// Wait till Tx FIFO is empty
+	UART1_IBRD_R = 10;          // Increase the Baud Rate
+	UART1_FBRD_R = 00;          // 250Kbps  Math: r = 40 MHz / (Nx250kHz) = 10, where N=16 and No fraction
+	UART1_LCRH_R = UART_LCRH_WLEN_8 | UART_LCRH_STP2; // According to datasheet everytime we change baudrate we must write to LCRH //configure for 8N2 w/ 1-level FIFO
+	putcUart1(startByte);		// Sending StartByte
+}
+
+
+// Turn On DMX transmission
+void dmxTxOn()
+{
+
+
+
+	//brkFunc();
+}
+
+
+// Turn On DMX transmission
+void dmxTxOff()
+{
+	UART1_IM_R = 0;                       // turn-off TX interrupt
+	U1TxINTflag = 1;					  // Clear the flag
+}

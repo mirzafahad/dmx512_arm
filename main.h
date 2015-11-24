@@ -54,13 +54,16 @@ See 'main.c'
 #define GREEN_LED    (*((volatile uint32_t *)(0x42000000 + (0x400253FC-0x40000000)*32 + 3*4)))
 #define PUSH_BUTTON  (*((volatile uint32_t *)(0x42000000 + (0x400253FC-0x40000000)*32 + 4*4)))
 
+#define dmxTxDE  	 (*((volatile uint32_t *)(0x42000000 + (0x400063FC-0x40000000)*32 + 6*4))) //PC6 ->RX485 Tx Enable pin
+#define U1TxINTflag  (*((volatile uint32_t *)(0x42000000 + (0x4000D044-0x40000000)*32 + 5*4))) //UART Interrupt Clear (UARTICR TXIC bit)
+
 
 #define TX_MODE 1
 #define RX_MODE 0
 //-----------------------------------------------------------------------------
 // Global Variable
 //-----------------------------------------------------------------------------
-int txPhase;
+
 
 
 
@@ -130,6 +133,8 @@ void initHw()
     GPIO_PORTF_DEN_R = 0x1A;  // enable LEDs and pushbuttons
     GPIO_PORTF_PUR_R = 0x10;  // enable internal pull-up for push button
 }
+
+
 
 
 #endif /* MAIN_H_ */

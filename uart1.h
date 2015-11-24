@@ -29,10 +29,11 @@ Devices used: UART1
 #ifndef UART1_H_
 #define UART1_H_
 
-void initUart1();
+void initUart1(void);
 void putcUart1(char);
 void putsUart1(const char*);
-char getcUart1();
-
+char getcUart1(void);
+void enableU1TxINT(void);
+void disableU1TxINT(void);
 
 #endif /* UART1_H_ */

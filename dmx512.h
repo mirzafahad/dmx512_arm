@@ -31,10 +31,12 @@ Devices used: UART
 
 
 extern unsigned char dmxData[513];  // Shared variable with main.c
+extern int maxDmxAddr;
+extern int txPhase;
 
-#define DE  	 (*((volatile uint32_t *)(0x42000000 + (0x400063FC-0x40000000)*32 + 6*4))) //PC6
-#define pollCode 0xF0				// Start code for POLL
-#define dataCode 0x00				// Start code for normal data
+
+#define pollStartByte 0xF0				// Start code for POLL
+#define dataStartByte 0x00				// Start code for normal data
 
 
 
@@ -51,4 +53,9 @@ int isCmd(char*, int);
 void clrDmxData(void);
 void getCmd(void);
 int getArgNum(int);
+void brkFunc();
+void sendStartByte(char);
+void dmxTxOn(void);
+void dmxTxOff(void);
+
 #endif /* DMX512_H_ */
