@@ -1,10 +1,21 @@
+/*! \file uart0.c \brief UART0 functions. */
+//*****************************************************************************
 /*
- * uart.c
- *
- *  Created on: October 19, 2015
- *  Revised on: 23rd November, 2015
- *  Author: Fahad Mirza (fahadmirza80@yahoo.com)
- */
+UART0 functions
+
+All rights reserved @ Fahad Mirza (fahadmirza80@yahoo.com)
+
+-----------------------------------------------------------------------------
+Notes
+-----------------------------------------------------------------------------
+File Name	: 'uart0.c'
+Created		: 19th October, 2015
+Revised		: 26th November, 2015
+Version		: 1.1
+Target uC	: TM4C123GH6PM
+Clock Source: 16 MHz primary oscillator
+Clock Rate	: 40 MHz using PLL
+*/
 
 #include <stdint.h>
 #include <string.h>
@@ -19,6 +30,7 @@ void initUart0()
 {
 	// Enable PORT A
 	SYSCTL_RCGC2_R |= SYSCTL_RCGC2_GPIOA;			 // Tx0->PA1  Rx0->PA0
+
 	// Configure UART0 pins
 	SYSCTL_RCGCUART_R |= SYSCTL_RCGCUART_R0;         // turn-on UART0, leave other uarts in same status
     GPIO_PORTA_DEN_R |= 3;                           // default, added for clarity
@@ -34,14 +46,20 @@ void initUart0()
     UART0_CTL_R = UART_CTL_TXE | UART_CTL_RXE | UART_CTL_UARTEN; // enable TX, RX, and module
 }
 
-// Blocking function that writes a serial character when the UART buffer is not full
+
+//**********************************************************************************//
+// Blocking function that writes a serial character when the UART buffer is not full//
+//**********************************************************************************//
 void putcUart0(char c)
 {
 	while (UART0_FR_R & UART_FR_TXFF);
 	UART0_DR_R = c;
 }
 
-// Blocking function that writes a string when the UART buffer is not full
+
+//************************************************************************//
+// Blocking function that writes a string when the UART buffer is not full//
+//************************************************************************//
 void putsUart0(const char* str)
 {
 	int i;
@@ -49,7 +67,10 @@ void putsUart0(const char* str)
 	  putcUart0(str[i]);
 }
 
-// Blocking function that returns with serial data once the buffer is not empty
+
+//******************************************************************************//
+// Blocking function that returns with serial data once the buffer is not empty //
+//******************************************************************************//
 char getcUart0()
 {
 	while (UART0_FR_R & UART_FR_RXFE);

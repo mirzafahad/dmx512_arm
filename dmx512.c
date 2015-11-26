@@ -1,10 +1,9 @@
-/*! \file dmx512.c \brief DMX512 Communication. */
+/*! \file dmx512.c \brief DMX512 Functions. */
 //*****************************************************************************
 /*
-DMX512 Communication
+DMX512 functions
 
-All rights reserved @
-Fahad Mirza (fahad.mirza34@mavs.uta.edu)
+All rights reserved @ Fahad Mirza (fahadmirza80@yahoo.com)
 
 
 Course Project (Fall 2015)
@@ -18,8 +17,8 @@ Notes
 -----------------------------------------------------------------------------
 File Name	: 'dmx512.c'
 Created		: 2nd November, 2015
-Revised		: 2nd November, 2015
-Version		: 1.0
+Revised		: 26th November, 2015
+Version		: 1.1
 Target uC	: TM4C123GH6PM
 Clock Source: 16 MHz primary oscillator
 Clock Rate	: 40 MHz using PLL
@@ -32,29 +31,12 @@ Clock Rate	: 40 MHz using PLL
 #include "uart0.h"
 #include "uart1.h"
 #include "dmx512.h"
+#include "bitband.h"
 #include "tm4c123gh6pm.h"
 
 
 #define DEBUG 0
 #define MAX_LENGTH 80		// Max number of bytes receiving from user at a time
-
-#define DEV_ADD0  	 (*((volatile uint32_t *)(0x42000000 + (0x400243FC-0x40000000)*32 + 1*4))) //PE1
-#define DEV_ADD1  	 (*((volatile uint32_t *)(0x42000000 + (0x400243FC-0x40000000)*32 + 2*4))) //PE2
-#define DEV_ADD2  	 (*((volatile uint32_t *)(0x42000000 + (0x400243FC-0x40000000)*32 + 3*4))) //PE3
-#define DEV_ADD3  	 (*((volatile uint32_t *)(0x42000000 + (0x400043FC-0x40000000)*32 + 3*4))) //PA3
-#define DEV_ADD4  	 (*((volatile uint32_t *)(0x42000000 + (0x400043FC-0x40000000)*32 + 6*4))) //PA6
-#define DEV_ADD5  	 (*((volatile uint32_t *)(0x42000000 + (0x400043FC-0x40000000)*32 + 7*4))) //PA7
-#define DEV_ADD6  	 (*((volatile uint32_t *)(0x42000000 + (0x400073FC-0x40000000)*32 + 2*4))) //PD2
-#define DEV_ADD7  	 (*((volatile uint32_t *)(0x42000000 + (0x400073FC-0x40000000)*32 + 3*4))) //PD3
-#define DEV_ADD8  	 (*((volatile uint32_t *)(0x42000000 + (0x400073FC-0x40000000)*32 + 6*4))) //PD6
-
-#define DEV_MODE  	 (*((volatile uint32_t *)(0x42000000 + (0x400063FC-0x40000000)*32 + 7*4))) //PC7
-
-#define U1TxINTflag  (*((volatile uint32_t *)(0x42000000 + (0x4000D044-0x40000000)*32 + 5*4))) //UART Interrupt Clear (UARTICR TXIC bit)
-#define U1TXBUSY 	 (*((volatile uint32_t *)(0x42000000 + (0x4000D018-0x40000000)*32 + 3*4))) //UART Flag register's bit 3 (Tx Busy)
-
-#define dmxTxDE  	 (*((volatile uint32_t *)(0x42000000 + (0x400063FC-0x40000000)*32 + 6*4))) //PC6 ->RX485 Tx Enable pin
-
 
 //-----------------------------------------------------------------------------
 // Constant Arrays
@@ -67,18 +49,18 @@ const char ready[]	= "Ready\r\n";
 // Global Variables
 //-----------------------------------------------------------------------------
 int txPhase;
-char inputStr[MAX_LENGTH+1];// +1 for NULL; To hold the user cmd
-unsigned char dmxData[513];
-int fieldCount;
-int maxDmxAddr = 1;			// Max Data slot for RS485
-bool txOn = true;			// RS485 On/Off
+char inputStr[MAX_LENGTH+1];	// +1 for NULL; To hold the user cmd
+unsigned char dmxData[513];		// Address 1 to 512 will be used
+int fieldCount;					// How many fields does CMD has?
+int maxDmxAddr = 1;				// Max Data slot for RS485
+bool txOn = true;				// RS485 On/Off
 
 //-----------------------------------------------------------------------------
 // Subroutines
 //-----------------------------------------------------------------------------
 
 //**********************************************//
-// Read the 9 pin dip switch as device address //
+// Read the 9 pins dip switch as device address //
 //**********************************************//
 unsigned int readDevAdd()
 {
@@ -245,19 +227,19 @@ int getInputChar()
 //***********************//
 bool parseStr(int pos[], char type[])
 {
-   bool noError = true;								// invalid cmd flag
+   bool noError = true;						// invalid cmd flag
    unsigned int i,j=0;
    unsigned char last_type = 'd';
 
-   fieldCount = 0;								// Initialize the global variable
+   fieldCount = 0;							// Initialize the global variable
 
    for(i=0;inputStr[i] != NULL && i<=MAX_LENGTH+1; i++)	// parse till string is null or till 20 character
    {
-      if(isalnum(inputStr[i]))					// Is it Alpahanumeric?
+      if(isalnum(inputStr[i]))				// Is it Alpahanumeric?
       {
-	     if(isalpha(inputStr[i]))				// Is it Alphabet?
+	     if(isalpha(inputStr[i]))			// Is it Alphabet?
 		 {
-		    if(last_type == 'd')				// d -> a transition. Record the position
+		    if(last_type == 'd')			// d -> a transition. Record the position
 			{
 			   pos[j] = i;
 			   type[j++] = 'a';
@@ -305,18 +287,19 @@ bool parseStr(int pos[], char type[])
 }
 
 
-int isCmd(char strVerb[], int count) // Check user string with predefined command. Return 1 if it match. Zero otherwise.
+// Check user string with predefined command. Return 1 if it match. Zero otherwise.
+int isCmd(char strVerb[], int count)
 {
    return ((strcmp(strVerb, inputStr)==0) && (count == fieldCount));
 }
 
 
-//********************//
-// atoi for the inStr //
-//********************//
+//***********************//
+// atoi for the inputStr //
+//***********************//
 int getArgNum(int index)
 {
-   return (atoi(&inputStr[index]));	//Change 'addr' and 'value' from ascii to integer
+   return (atoi(&inputStr[index]));					//Change 'addr' and 'value' from ascii to integer
 }
 
 //******************//
@@ -339,12 +322,14 @@ void clrDmxData()
 //*******************************//
 void brkFunc()
 {
-	while(U1TXBUSY);				// Wait till Tx FIFO is empty
+	while(U1TXBUSY);								   // Wait till Tx FIFO is empty
 
-	UART1_IBRD_R = 30;              // Slow the Baud Rate
-	UART1_FBRD_R = 00;              // 83.33Kbps  Math: r = 40 MHz / (Nx83.33kHz) = 30, where N=16 and No fraction
-	UART1_LCRH_R = UART_LCRH_WLEN_8 | UART_LCRH_STP2;  // According to datasheet everytime we change baudrate we must write to LCRH //configure for 8N2 w/ 1-level FIFO
-	putcUart1(0);					// Sending Break and MAB
+	UART1_IBRD_R = 30;              				   // Slow the Baud Rate
+	UART1_FBRD_R = 00;              				   // 83.33Kbps  Math: r = 40 MHz / (Nx83.33kHz) = 30, where N=16 and No fraction
+
+	UART1_LCRH_R = UART_LCRH_WLEN_8 | UART_LCRH_STP2;  // According to datasheet everytime we change baudrate we must write to LCRH
+													   //configure for 8N2 w/ 1-level FIFO
+	putcUart1(0);									   // Sending Break and MAB
 }
 
 //********************************//
@@ -352,21 +337,22 @@ void brkFunc()
 //********************************//
 void sendStartByte(char startByte)
 {
-	while(U1TXBUSY);			// Wait till Tx FIFO is empty
-	UART1_IBRD_R = 10;          // Increase the Baud Rate
-	UART1_FBRD_R = 00;          // 250Kbps  Math: r = 40 MHz / (Nx250kHz) = 10, where N=16 and No fraction
-	UART1_LCRH_R = UART_LCRH_WLEN_8 | UART_LCRH_STP2; // According to datasheet everytime we change baudrate we must write to LCRH //configure for 8N2 w/ 1-level FIFO
-	putcUart1(startByte);		// Sending StartByte
+	while(U1TXBUSY);								  // Wait till Tx FIFO is empty
+	UART1_IBRD_R = 10;          					  // Increase the Baud Rate
+	UART1_FBRD_R = 00;          					  // 250Kbps  Math: r = 40 MHz / (Nx250kHz) = 10, where N=16 and No fraction
+
+	UART1_LCRH_R = UART_LCRH_WLEN_8 | UART_LCRH_STP2; // According to datasheet everytime we change baudrate we must write to LCRH
+													  //configure for 8N2 w/ 1-level FIFO
+	putcUart1(startByte);							  // Sending StartByte
 }
 
 
 // Turn On DMX transmission
 void dmxTxOn()
 {
-
-
-
-	//brkFunc();
+	dmxTxDEN = 1;
+	txPhase = 1;
+	enableU1TxINT();
 }
 
 

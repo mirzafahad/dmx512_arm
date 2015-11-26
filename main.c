@@ -3,7 +3,7 @@
 /*
 DMX512 Communication
 
-All rights reserved @ Fahad Mirza (fahad.mirza34@mavs.uta.edu)
+All rights reserved @ Fahad Mirza (fahadmirza80@yahoo.com)
 
 Course Project (Fall 2015)
 Embedded System Controller - EE5314
@@ -16,18 +16,18 @@ Notes
 -----------------------------------------------------------------------------
 File Name	: 'main.c'
 Created		: 19th October, 2015
-Revised		: 19th October, 2015
-Version		: 1.0
+Revised		: 26th November, 2015
+Version		: 1.1
 Target uC	: TM4C123GH6PM
 Clock Source: 16 MHz primary oscillator
 Clock Rate	: 40 MHz using PLL
-Devices used: UART
+Devices used: UART0 & 1
 
 ------------------------------------------------------------------------------------
 Objective
 ------------------------------------------------------------------------------------
 CONTROLLER Code:
-Get command(string) from PC (RS-232), parse it and send instruction through RS-485.
+Get command(string) from PC (RS-232), parse it and send data through RS-485.
 
 
 -----------------------------------------------------------------------------
@@ -35,9 +35,7 @@ Get command(string) from PC (RS-232), parse it and send instruction through RS-4
 -----------------------------------------------------------------------------
 
 Hardware configuration:
-Red Backlight LED: PB5 drives an NPN transistor that powers the red LED
-Green Backlight LED: PE4 drives an NPN transistor that powers the green LED
-Blue Backlight LED: PE5 drives an NPN transistor that powers the blue LED
+Blue Backlight LED: PF2 powers the blue LED
 Red LED: PF1 drives an NPN transistor that powers the red LED
 Green LED: PF3 drives an NPN transistor that powers the green LED
 Pushbutton: SW1 pulls pin PF4 low (internal pull-up is used)
@@ -47,25 +45,9 @@ UART Interface:
   Configured to 115,200 baud, 8N1
 */
 
-//-----------------------------------------------------------------------------
-// Device includes, defines, and assembler directives
-//-----------------------------------------------------------------------------
 
-#include <stdint.h>
-#include <stdlib.h>
-#include <stdbool.h>
-#include <string.h>
-#include "tm4c123gh6pm.h"
-#include "uart0.h"
-#include "uart1.h"
+
 #include "main.h"
-
-//-----------------------------------------------------------------------------
-// Global Variable
-//-----------------------------------------------------------------------------
-
-
-
 
 
 //-----------------------------------------------------------------------------
@@ -117,15 +99,14 @@ int main(void)
 
 
 
-
-	// Display greeting
+	// Display device address and mode
     deviceAdd = readDevAdd();
     deviceMode = readDevMode();
     ltoa(deviceAdd,buffer);
     putsUart0("Device Address: ");  putsUart0(buffer);  putsUart0("\r\n");
     if(deviceMode == TX_MODE)
     {
-    	dmxTxDE = 1;
+    	dmxTxDEN = 1;
     	txPhase = 1;
     	putsUart0("Tx Mode\r\n");
     	enableU1TxINT();

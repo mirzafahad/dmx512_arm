@@ -3,8 +3,7 @@
 /*
 DMX512 Communication
 
-All rights reserved @
-Fahad Mirza (fahad.mirza34@mavs.uta.edu)
+All rights reserved @ Fahad Mirza (fahadmirza80@yahoo.com)
 
 
 Course Project (Fall 2015)
@@ -18,8 +17,8 @@ Notes
 -----------------------------------------------------------------------------
 File Name	: 'main.h'
 Created		: 19th October, 2015
-Revised		: 19th October, 2015
-Version		: 1.0
+Revised		: 26th November, 2015
+Version		: 1.1
 Target uC	: TM4C123GH6PM
 Clock Source: 16 MHz primary oscillator
 Clock Rate	: 40 MHz using PLL
@@ -28,7 +27,7 @@ Devices used: UART
 ------------------------------------------------------------------------------------
 Objective
 ------------------------------------------------------------------------------------
-Current Objective: Step 1-3
+Current Objective: Step 1-7
 Ultimate Objective CONTROLLER Code:
 Get command(string) from PC (RS-232), parse it and send instruction through
 RS-485.
@@ -47,17 +46,17 @@ See 'main.c'
 // Device includes, defines, and assembler directives
 //-----------------------------------------------------------------------------
 
-#include "tm4c123gh6pm.h"
+#include <stdint.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <string.h>
+#include "uart0.h"
+#include "uart1.h"
 #include "dmx512.h"
+#include "tm4c123gh6pm.h"
+#include "bitband.h"
 
-#define RED_LED      (*((volatile uint32_t *)(0x42000000 + (0x400253FC-0x40000000)*32 + 1*4)))
-#define GREEN_LED    (*((volatile uint32_t *)(0x42000000 + (0x400253FC-0x40000000)*32 + 3*4)))
-#define PUSH_BUTTON  (*((volatile uint32_t *)(0x42000000 + (0x400253FC-0x40000000)*32 + 4*4)))
-
-#define dmxTxDE  	 (*((volatile uint32_t *)(0x42000000 + (0x400063FC-0x40000000)*32 + 6*4))) //PC6 ->RX485 Tx Enable pin
-#define U1TxINTflag  (*((volatile uint32_t *)(0x42000000 + (0x4000D044-0x40000000)*32 + 5*4))) //UART Interrupt Clear (UARTICR TXIC bit)
-
-
+// Device Mode
 #define TX_MODE 1
 #define RX_MODE 0
 //-----------------------------------------------------------------------------
@@ -97,7 +96,10 @@ void waitMicrosecond(uint32_t us)
                                                 // 40 clocks/us + error
 }
 
-// Initialize Hardware
+
+//*************************//
+// Initialize the Hardware //
+//*************************//
 void initHw()
 {
 	// Configure HW to work with 16 MHz XTAL, PLL enabled, system clock of 40 MHz
