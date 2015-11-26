@@ -55,7 +55,6 @@ UART Interface:
 //-----------------------------------------------------------------------------
 void Uart1Isr()
 {
-	U1TxINTflag = 1; 						// Clear the flag
 	if(txPhase == 0)
 	{
 		brkFunc();
@@ -69,7 +68,7 @@ void Uart1Isr()
 		putcUart1(dmxData[txPhase-1]);
 	}
 	txPhase = (txPhase+1)%(maxDmxAddr+2);
-
+	U1TxINTflag = 1; 						// Clear the flag
 }
 
 //-----------------------------------------------------------------------------

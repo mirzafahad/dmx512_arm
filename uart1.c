@@ -45,7 +45,7 @@ void initUart1()
     UART1_IBRD_R = 10;                               			 // 250Kbps  Math: r = 40 MHz / (Nx250kHz) = 10, where N=16
     UART1_FBRD_R = 00;                               			 // No fraction
     UART1_LCRH_R = UART_LCRH_WLEN_8 | UART_LCRH_STP2;			 // configure for 8N2 w/ 1-level FIFO
-    UART1_CTL_R = UART_CTL_TXE | UART_CTL_RXE | UART_CTL_UARTEN; // enable TX, RX, and module
+    UART1_CTL_R = UART_CTL_TXE | UART_CTL_RXE | UART_CTL_UARTEN | UART_CTL_EOT; // enable TX, RX, UART1 and set interrupt for 'End of transmission'
 
     //Configure Tx Interrupt
     //UART1_IM_R = UART_IM_TXIM;					 			 // Used in separate function
