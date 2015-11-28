@@ -32,12 +32,13 @@ Clock Rate	: 40 MHz using PLL
 void initUart1()
 {
 	// Enable PORT C
-	SYSCTL_RCGC2_R |= SYSCTL_RCGC2_GPIOC;			 			// Tx1->PC5  Rx1->PC4
+	SYSCTL_RCGC2_R |= SYSCTL_RCGC2_GPIOC;			 			 // Tx1->PC5  Rx1->PC4
 	// Configure UART1 pins
-	SYSCTL_RCGCUART_R |= SYSCTL_RCGCUART_R1;         			// turn-on UART1, leave other uarts in same status
-    GPIO_PORTC_DEN_R |= 0x30;                        			// Enable digital function of PC4 and PC5
-	GPIO_PORTC_AFSEL_R |= 0x30;                         		// Enable alternate function
-    GPIO_PORTC_PCTL_R |= GPIO_PCTL_PC5_U1TX | GPIO_PCTL_PC4_U1RX;
+	SYSCTL_RCGCUART_R |= SYSCTL_RCGCUART_R1;         			 // turn-on UART1, leave other uarts in same status
+	GPIO_PORTC_AFSEL_R |= 0x30;                         		 // Enable alternate function
+	GPIO_PORTC_PCTL_R &= ~(GPIO_PCTL_PC5_M | GPIO_PCTL_PC4_M); 	 // Clear config of PC4 and PC5
+    GPIO_PORTC_PCTL_R |= GPIO_PCTL_PC5_U1TX | GPIO_PCTL_PC4_U1RX;// Set PC4 and PC5 as Rx and Tx
+    GPIO_PORTC_DEN_R |= 0x30;                        			 // Enable digital function of PC4 and PC5
 
    	// Configure UART1 to 250K baud, 8N2 format
     UART1_CTL_R = 0;                                 			 // turn-off UART1 to allow safe programming

@@ -85,6 +85,134 @@ int readDevMode()
 	return deviceMode;
 }
 
+/*****************************************************************
+* Parse and Find the point of interest in dmxData(Position in the
+* array and type[Number, Character, delimiter]). If the CMD is
+* not valid it will print(UART0) where is the error.
+*
+* Input	: Pointer for Position and Type
+* Return: True, if the CMD is valid
+*		  False, if not valid.
+*****************************************************************/
+bool parseStr(int pos[], char type[])
+{
+   bool noError = true;						// invalid cmd flag
+   unsigned int i,j=0;
+   unsigned char last_type = 'd';
+
+   fieldCount = 0;							// Initialize the global variable
+
+   for(i=0;inputStr[i] != NULL && i<=MAX_LENGTH+1; i++)	// parse till string is null or till 20 character
+   {
+      if(isalnum(inputStr[i]))				// Is it Alpahanumeric?
+      {
+	     if(isalpha(inputStr[i]))			// Is it Alphabet?
+		 {
+		    if(last_type == 'd')			// d -> a transition. Record the position
+			{
+			   pos[j] = i;
+			   type[j++] = 'a';
+			   last_type = 'a';
+			   fieldCount++;
+			}
+			else if(last_type == 'n')		// n -> a tansition. Error.
+			{
+				noError = false;
+				break;
+			}
+		 }
+         else if(isdigit(inputStr[i]))		// Is it Number?
+		 {
+		    if(last_type == 'd')			// d -> n transition. Record the position.
+			{
+			   pos[j] = i;
+			   type[j++] = 'n';
+			   last_type = 'n';
+			   fieldCount++;
+			}
+			else if(last_type == 'a')		// a -> n transition. Error.
+			{
+				noError = false;
+				break;
+			}
+		 }
+	  }
+	  else									// If it is not Alphanumeric then it is delimiter. Replace with NULL.
+	  {
+		 inputStr[i] = NULL;
+	     last_type = 'd';
+	  }
+   }
+   if(!noError)
+   {
+	   int j;
+	   for(j=0;j<i;j++)
+	   {
+		   putcUart0(' ');
+	   }
+	   putsUart0("^\r\n");
+   }
+   return noError;							// Return 0 if there is invalid sequence. Otherwise return 1.
+}
+
+
+/*******************************************************************
+* Compare CMD and its field count with the string and count argument
+* Return: 1(matched) or 0 (didn't match)
+*******************************************************************/
+int isCmd(char strVerb[], int count)
+{
+   return ((strcmp(strVerb, inputStr)==0) && (count == fieldCount));
+}
+
+
+/**********************************************
+* Convert the String Number from CMD to integer
+* Input: Index of CMD(dmxData[])
+* Return: The number in Int
+**********************************************/
+int getArgNum(int index)
+{
+   return (atoi(&inputStr[index]));					//Change 'addr' and 'value' from ascii to integer
+}
+
+
+/************************************************
+* Get character from UART0 and organize the array
+* Save data in Global dmxData[]
+*
+* Return: 1, if received CR or buffer full
+*		  0, else
+************************************************/
+int getInputChar()
+{
+   char temp;
+   static unsigned int count = 0;		// Limit user input within 80 character
+
+   temp = getcUart0();					// Get Character
+   if((temp == 8) && (count>0))			// Is it 'backspace' and does it has something to erase?
+   {
+      count--;
+   }
+   else if(temp == '\r')				// Is it CR?
+   {
+      inputStr[count] = NULL;			// Complete the buffer
+	  count = 0;
+	  return 1;							// Return 1 if it is CR
+   }
+   else if(temp>=32 && temp<=126)		// Is it a 'Printable character'?
+   {
+	  inputStr[count++]=tolower(temp);	// Store with lower case
+      if(count == MAX_LENGTH)			// Is buffer full?
+	  {
+		 inputStr[count] = NULL;
+		 count = 0;
+		 return 1;						// Buffer full, return 1
+   	  }
+   }
+   return 0;							// Return 0 if it isn't CR
+}
+
 
 //**************************************//
 // Read user data & process accordingly //
@@ -189,118 +317,6 @@ void getCmd()
 }
 
 
-//***********************************************//
-// Get character from UART and organize the array//		Step3
-//***********************************************//
-int getInputChar()
-{
-   char temp;
-   static unsigned int count = 0;		// Limit user input within 80 character
-
-   temp = getcUart0();					// Get Character
-   if((temp == 8) && (count>0))			// Is it 'backspace' and does it has something to erase?
-   {
-      count--;
-   }
-   else if(temp == '\r')				// Is it CR?
-   {
-      inputStr[count] = NULL;			// Complete the buffer
-	  count = 0;
-	  return 1;							// Return 1 if it is CR
-   }
-   else if(temp>=32 && temp<=126)		// Is it a 'Printable character'?
-   {
-	  inputStr[count++]=tolower(temp);	// Store with lower case
-      if(count == MAX_LENGTH)			// Is buffer full?
-	  {
-		 inputStr[count] = NULL;
-		 count = 0;
-		 return 1;						// Buffer full, return 1
-   	  }
-   }
-   return 0;							// Return 0 if it isn't CR
-}
-
-
-//***********************//
-// Parse the CMD string //
-//***********************//
-bool parseStr(int pos[], char type[])
-{
-   bool noError = true;						// invalid cmd flag
-   unsigned int i,j=0;
-   unsigned char last_type = 'd';
-
-   fieldCount = 0;							// Initialize the global variable
-
-   for(i=0;inputStr[i] != NULL && i<=MAX_LENGTH+1; i++)	// parse till string is null or till 20 character
-   {
-      if(isalnum(inputStr[i]))				// Is it Alpahanumeric?
-      {
-	     if(isalpha(inputStr[i]))			// Is it Alphabet?
-		 {
-		    if(last_type == 'd')			// d -> a transition. Record the position
-			{
-			   pos[j] = i;
-			   type[j++] = 'a';
-			   last_type = 'a';
-			   fieldCount++;
-			}
-			else if(last_type == 'n')		// n -> a tansition. Error.
-			{
-				noError = false;
-				break;
-			}
-		 }
-         else if(isdigit(inputStr[i]))		// Is it Number?
-		 {
-		    if(last_type == 'd')			// d -> n transition. Record the position.
-			{
-			   pos[j] = i;
-			   type[j++] = 'n';
-			   last_type = 'n';
-			   fieldCount++;
-			}
-			else if(last_type == 'a')		// a -> n transition. Error.
-			{
-				noError = false;
-				break;
-			}
-		 }
-	  }
-	  else									// If it is not Alphanumeric then it is delimiter. Replace with NULL.
-	  {
-		 inputStr[i] = NULL;
-	     last_type = 'd';
-	  }
-   }
-   if(!noError)
-   {
-	   int j;
-	   for(j=0;j<i;j++)
-	   {
-		   putcUart0(' ');
-	   }
-	   putsUart0("^\r\n");
-   }
-   return noError;							// Return 0 if there is invalid sequence. Otherwise return 1.
-}
-
-
-// Check user string with predefined command. Return 1 if it match. Zero otherwise.
-int isCmd(char strVerb[], int count)
-{
-   return ((strcmp(strVerb, inputStr)==0) && (count == fieldCount));
-}
-
-
-//***********************//
-// atoi for the inputStr //
-//***********************//
-int getArgNum(int index)
-{
-   return (atoi(&inputStr[index]));					//Change 'addr' and 'value' from ascii to integer
-}
 
 //******************//
 // Clear DMX Buffer //
@@ -325,7 +341,7 @@ void brkFunc()
 	while(U1TXBUSY);								   // Wait till Tx FIFO is empty
 
 	UART1_IBRD_R = 30;              				   // Slow the Baud Rate
-	UART1_FBRD_R = 00;              				   // 83.33Kbps  Math: r = 40 MHz / (Nx83.33kHz) = 30, where N=16 and No fraction
+													   // 83.33Kbps  Math: r = 40 MHz / (Nx83.33kHz) = 30, where N=16 and No fraction
 
 	UART1_LCRH_R = UART_LCRH_WLEN_8 | UART_LCRH_STP2;  // According to datasheet everytime we change baudrate we must write to LCRH
 													   //configure for 8N2 w/ 1-level FIFO
@@ -339,7 +355,7 @@ void sendStartByte(char startByte)
 {
 	while(U1TXBUSY);								  // Wait till Tx FIFO is empty
 	UART1_IBRD_R = 10;          					  // Increase the Baud Rate
-	UART1_FBRD_R = 00;          					  // 250Kbps  Math: r = 40 MHz / (Nx250kHz) = 10, where N=16 and No fraction
+													  // 250Kbps  Math: r = 40 MHz / (Nx250kHz) = 10, where N=16 and No fraction
 
 	UART1_LCRH_R = UART_LCRH_WLEN_8 | UART_LCRH_STP2; // According to datasheet everytime we change baudrate we must write to LCRH
 													  //configure for 8N2 w/ 1-level FIFO

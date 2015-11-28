@@ -42,70 +42,26 @@ extern int txPhase;
 *********************************************/
 unsigned int readDevAdd();
 
-
 /*********************************************
 * Read the 10th dip switch for device mode
 * Return: 1(Tx_mode) or 0(Rx_mode)
 *********************************************/
 int readDevMode();
 
-
-/************************************************
-* Get character from UART0 and organize the array
-* Save data in Global dmxData[]
-*
-* Return: 1, if received CR or buffer full
-*		  0, else
-************************************************/
-int getInputChar(void);
-
-
-/*****************************************************************
-* Parse and Find the point of interest in dmxData(Position in the
-* array and type[Number, Character, delimiter]). If the CMD is
-* not valid it will print(UART0) where is the error.
-*
-* Input	: Pointer for Position and Type
-* Return: True, if the CMD is valid
-*		  False, if not valid.
-*****************************************************************/
-bool parseStr(int*, char*);
-
-
-/*******************************************************************
-* Compare CMD and its field count with the string and count argument
-* Return: 1(matched) or 0 (didn't match)
-*******************************************************************/
-int isCmd(char*, int);
-
-
 /******************
 * Clear dmxData[]
 ******************/
 void clrDmxData(void);
 
-
-
-/**********************
-* Read CMD and Executes
-**********************/
+/***************************
+* Read user CMD and Executes
+***************************/
 void getCmd(void);
-
-
-/**********************************************
-* Convert the String Number from CMD to integer
-* Input: Index of CMD(dmxData[])
-* Return: The number in Int
-**********************************************/
-int getArgNum(int);
-
 
 /************************
  * Generate Break signal.
 ************************/
 void brkFunc();
-
-
 
 /*******************
  * Send Start Byte.
