@@ -55,20 +55,55 @@ UART Interface:
 //-----------------------------------------------------------------------------
 void Uart1Isr()
 {
-	if(txPhase == 0)
+	if(U1_TX_INT)
 	{
-		brkFunc();
+		if(txPhase == 0)
+		{
+			brkFunc();
+		}
+		else if(txPhase == 1)
+		{
+			sendStartByte(dataStartByte);
+		}
+		else
+		{
+			putcUart1(dmxData[txPhase-1]);
+		}
+		txPhase = (txPhase+1)%(maxDmxAddr+2);
+		U1_TX_INT_FLAG = 1; 						// Clear the flag
 	}
-	else if(txPhase == 1)
+	else if(U1_FRAME_INT)
 	{
-		sendStartByte(dataStartByte);
+		if(getcUart1() == 0)					// Is it break?
+		{
+			rxPhase = 1;
+			U1_FR_INT_FLAG = 1;
+		}
 	}
-	else
+	else if(U1_RX_INT)
 	{
-		putcUart1(dmxData[txPhase-1]);
+		char temp;
+		temp = UART1_DR_R & 0xFF;
+		if(rxPhase == 1)
+		{
+			if(temp == 0)				// Is it Start Code == data code?
+				rxPhase++;
+		}
+		else if(rxPhase>1)
+		{
+			if((rxPhase-1) == deviceAdd)
+			{
+				if(temp>0)
+					BLUE_LED = 1;
+				else
+					BLUE_LED = 0;
+
+				rxPhase = 0;
+			}
+			else
+				rxPhase++;
+		}
 	}
-	txPhase = (txPhase+1)%(maxDmxAddr+2);
-	U1TxINTflag = 1; 						// Clear the flag
 }
 
 //-----------------------------------------------------------------------------
@@ -79,7 +114,6 @@ int main(void)
 {
 	// Local variables
 	char buffer[6];
-	unsigned int deviceAdd;  			//***************** Not sure yet if this needs to be global***********//
 	int deviceMode;						//***************** Not sure yet if this needs to be global***********//
 
 
@@ -98,11 +132,10 @@ int main(void)
 
 
 
-	// Display device address and mode
-    deviceAdd = readDevAdd();
+	// Display device mode
+
     deviceMode = readDevMode();
-    ltoa(deviceAdd,buffer);
-    putsUart0("Device Address: ");  putsUart0(buffer);  putsUart0("\r\n");
+
     if(deviceMode == TX_MODE)
     {
     	dmxTxDEN = 1;
@@ -110,16 +143,24 @@ int main(void)
     	putsUart0("Tx Mode\r\n");
     	enableU1TxINT();
     	brkFunc();
+    	while(1)
+		{
+			getCmd();
+		}
     }
     else
-    	putsUart0("Rx Mode\r\n");
-
-
-    while(1)
     {
-    	if(deviceMode == TX_MODE)
-    	{
-    		getCmd();
-    	}
+    	putsUart0("Rx Mode\r\n");
+    	deviceAdd = readDevAdd();
+    	ltoa(deviceAdd,buffer);
+    	putsUart0("Device Address: ");  putsUart0(buffer);  putsUart0("\r\n");
+
+    	dmxTxDEN = 0;
+    	disableU1TxINT();
+    	enableU1RxINT();
+    	while(1);
+
     }
+
+
 }

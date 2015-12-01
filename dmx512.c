@@ -48,12 +48,12 @@ const char ready[]	= "Ready\r\n";
 //-----------------------------------------------------------------------------
 // Global Variables
 //-----------------------------------------------------------------------------
-int txPhase;
-char inputStr[MAX_LENGTH+1];	// +1 for NULL; To hold the user cmd
-unsigned char dmxData[513];		// Address 1 to 512 will be used
-int fieldCount;					// How many fields does CMD has?
-int maxDmxAddr = 1;				// Max Data slot for RS485
-bool txOn = true;				// RS485 On/Off
+volatile int txPhase, rxPhase;
+char inputStr[MAX_LENGTH+1];		// +1 for NULL; To hold the user cmd
+volatile unsigned char dmxData[513];// Address 1 to 512 will be used
+int fieldCount;						// How many fields does CMD has?
+int maxDmxAddr = 1;					// Max Data slot for RS485
+bool txOn = true;					// RS485 On/Off
 
 //-----------------------------------------------------------------------------
 // Subroutines
@@ -338,7 +338,7 @@ void clrDmxData()
 //*******************************//
 void brkFunc()
 {
-	while(U1TXBUSY);								   // Wait till Tx FIFO is empty
+	while(U1_TX_BUSY);								   // Wait till Tx FIFO is empty
 
 	UART1_IBRD_R = 30;              				   // Slow the Baud Rate
 													   // 83.33Kbps  Math: r = 40 MHz / (Nx83.33kHz) = 30, where N=16 and No fraction
@@ -353,7 +353,7 @@ void brkFunc()
 //********************************//
 void sendStartByte(char startByte)
 {
-	while(U1TXBUSY);								  // Wait till Tx FIFO is empty
+	while(U1_TX_BUSY);								  // Wait till Tx FIFO is empty
 	UART1_IBRD_R = 10;          					  // Increase the Baud Rate
 													  // 250Kbps  Math: r = 40 MHz / (Nx250kHz) = 10, where N=16 and No fraction
 
@@ -376,5 +376,5 @@ void dmxTxOn()
 void dmxTxOff()
 {
 	UART1_IM_R = 0;                       // turn-off TX interrupt
-	U1TxINTflag = 1;					  // Clear the flag
+	U1_TX_INT_FLAG = 1;					  // Clear the flag
 }

@@ -63,7 +63,7 @@ See 'main.c'
 // Global Variable
 //-----------------------------------------------------------------------------
 
-
+volatile unsigned int deviceAdd;
 
 
 //-----------------------------------------------------------------------------
@@ -130,9 +130,9 @@ void initHw()
     GPIO_PORTE_DEN_R = 0x0E;  // enable 1,2,3 push buttons
     GPIO_PORTE_PUR_R = 0x0E;  // enable pull-up
 
-    GPIO_PORTF_DIR_R = 0x0A;  // bits 1 and 3 are outputs, other pins are inputs
-    GPIO_PORTF_DR2R_R = 0x0A; // set drive strength to 2mA (not needed since default configuration -- for clarity)
-    GPIO_PORTF_DEN_R = 0x1A;  // enable LEDs and pushbuttons
+    GPIO_PORTF_DIR_R = 0x0E;  // bits 1,2 & 3 are outputs, 4 is input
+    GPIO_PORTF_DR2R_R = 0x0E; // set drive strength to 2mA (not needed since default configuration -- for clarity)
+    GPIO_PORTF_DEN_R = 0x1E;  // enable LEDs and pushbuttons
     GPIO_PORTF_PUR_R = 0x10;  // enable internal pull-up for push button
 }
 

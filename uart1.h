@@ -36,8 +36,12 @@ char getcUart1(void);
 // Enable Tx Interrupt
 void enableU1TxINT(void);
 
+// Enable Receiver (Frame error & Rx) Interrupt
+void enableU1RxINT(void);
 
-// Disable Tx Interrupt
+// Disable Transmit Interrupt
 void disableU1TxINT(void);
+// Disable Receiver (Frame error & Rx) Interrupt
+void disableU1RxINT(void);
 
 #endif /* UART1_H_ */

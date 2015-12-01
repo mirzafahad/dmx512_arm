@@ -23,9 +23,10 @@ Devices used: UART1
 #define DMX512_H_
 
 // Shared variables with main.c
-extern unsigned char dmxData[513];
+extern volatile unsigned char dmxData[513];
 extern int maxDmxAddr;
-extern int txPhase;
+extern volatile int txPhase;
+extern volatile int rxPhase;
 
 
 #define pollStartByte 0xF0				// Start code for POLL

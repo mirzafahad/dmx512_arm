@@ -48,29 +48,44 @@ void initUart1()
     UART1_LCRH_R = UART_LCRH_WLEN_8 | UART_LCRH_STP2;			 // configure for 8N2 w/ 1-level FIFO
     UART1_CTL_R = UART_CTL_TXE | UART_CTL_RXE | UART_CTL_UARTEN | UART_CTL_EOT; // enable TX, RX, UART1 and set interrupt for 'End of transmission'
 
-    //Configure Tx Interrupt
-    //UART1_IM_R = UART_IM_TXIM;					 			 // Used in separate function
-    UART1_ICR_R = 0x20;;							  			 // Tx interrupt flag clear
-    NVIC_EN0_R |= 1 << (INT_UART1-16);                			 // turn-on tx interrupt (22) (UART1)
+    //Configure Interrupt
+    UART1_ICR_R = 0xB0;;							  			 // Rx,Tx & Frame error interrupt flag clear
+    NVIC_EN0_R |= 1 << (INT_UART1-16);                			 // turn-on UART1 interrupt (22)
 }
 
-//*********************//
-// Enable Tx Interrupt //
-//*********************//
+//***************************//
+// Enable Transmit Interrupt //
+//***************************//
 void enableU1TxINT()
 {
-	UART1_IM_R = UART_IM_TXIM;            // turn-on U1TX interrupt
+	UART1_IM_R |= UART_IM_TXIM;            		  // turn-on U1TX interrupt
 }
 
 
-//**********************//
-// Disable Tx Interrupt //
-//**********************//
+//****************************//
+// Disable Transmit Interrupt //
+//****************************//
 void disableU1TxINT()
 {
-	UART1_IM_R = 0;                       // turn-off TX interrupt
+	UART1_IM_R &= ~UART_IM_TXIM;                  // turn-off TX interrupt
 }
 
+//***************************//
+// Enable Receiver Interrupt //
+//***************************//
+void enableU1RxINT()
+{
+	UART1_IM_R |= UART_IM_RXIM | UART_IM_FEIM;    // turn-on U1Rx & Frame error interrupt
+}
+
+
+//****************************//
+// Disable Receiver Interrupt //
+//****************************//
+void disableU1RxINT()
+{
+	UART1_IM_R &= ~(UART_IM_RXIM | UART_IM_FEIM); // turn-on U1TX interrupt
+}
 
 //***********************************************************************************//
 // Blocking function that writes a serial character when the UART buffer is not full //
