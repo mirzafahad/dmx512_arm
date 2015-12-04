@@ -10,6 +10,7 @@ All the steps are working till 9. POLL command is tested with three hardware and
 
 #### Bugs ####
 POLL command has some bugs:
+
 1) If maximum data transfer is less then available device address's on the bus (Max < 512) then sometimes POLL doesn't works properly. Need to check.
 
 2) If there is more then one device on the bus I had to call findDevice more then once. dmx512.c line 320. 
