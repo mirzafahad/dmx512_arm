@@ -1,5 +1,5 @@
 # DMX Communication protocol #
-##### Embedded System Course Project
+#### Embedded System Course Project
 
 This code was written as a part of course project for Embedded System (EE5314), UTA.
 
