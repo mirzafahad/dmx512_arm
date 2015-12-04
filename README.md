@@ -4,8 +4,8 @@
 This code was written as a part of course project for Embedded System (EE5314), UTA.
 
 
-### Update ###
-All the steps are working. POLL command is tested with three hardware and worked. Having some issues with POLL command.
+#### Update ####
+All the steps are working till 9. POLL command is tested with three hardware and worked. Having some issues with POLL command. LED activity (step 10) hasn't been implemented. 
  
 
 #### Bugs ####
