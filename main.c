@@ -16,7 +16,7 @@ Notes
 -----------------------------------------------------------------------------
 File Name	: 'main.c'
 Created		: 19th October, 2015
-Revised		: 26th November, 2015
+Revised		: 2nd December, 2015
 Version		: 1.1
 Target uC	: TM4C123GH6PM
 Clock Source: 16 MHz primary oscillator
@@ -35,7 +35,7 @@ Get command(string) from PC (RS-232), parse it and send data through RS-485.
 -----------------------------------------------------------------------------
 
 Hardware configuration:
-Blue Backlight LED: PF2 powers the blue LED
+Blue LED: PF2 powers the blue LED
 Red LED: PF1 drives an NPN transistor that powers the red LED
 Green LED: PF3 drives an NPN transistor that powers the green LED
 Pushbutton: SW1 pulls pin PF4 low (internal pull-up is used)
@@ -69,25 +69,35 @@ void Uart1Isr()
 		{
 			putcUart1(dmxData[txPhase-1]);
 		}
-		txPhase = (txPhase+1)%(maxDmxAddr+2);
-		U1_TX_INT_FLAG = 1; 						// Clear the flag
+		txPhase = (txPhase+1)%(maxDmxAddr+2);	// Ring counter
+		U1_TX_INT_FLAG = 1; 					// Clear the flag
 	}
-	else if(U1_FRAME_INT)
+	else if(U1_FRAME_INT)						// Frame error?
 	{
 		if(getcUart1() == 0)					// Is it break?
 		{
 			rxPhase = 1;
-			U1_FR_INT_FLAG = 1;
+			U1_FRAME_INT_FLAG = 1;
 		}
 	}
-	else if(U1_RX_INT)
+	else if(U1_RX_INT)							// Data received in UART1?
 	{
 		char temp;
-		temp = UART1_DR_R & 0xFF;
+		temp = UART1_DR_R & 0xFF;				// Read UART1 Rx data
+
 		if(rxPhase == 1)
 		{
-			if(temp == 0)				// Is it Start Code == data code?
-				rxPhase++;
+			if(temp == dataStartByte)
+				rxPhase = 2;
+			else if(temp == pollStartByte)
+			{
+				poll_receive = true;
+				rxPhase = 0;
+				disableU1RxINT();
+			}
+			else
+				rxPhase = 0;					// Look for break
+
 		}
 		else if(rxPhase>1)
 		{
@@ -139,10 +149,14 @@ int main(void)
     if(deviceMode == TX_MODE)
     {
     	dmxTxDEN = 1;
+    	waitMicrosecond(100);	// Stabilization time
     	txPhase = 1;
+
     	putsUart0("Tx Mode\r\n");
+
     	enableU1TxINT();
     	brkFunc();
+
     	while(1)
 		{
 			getCmd();
@@ -156,9 +170,41 @@ int main(void)
     	putsUart0("Device Address: ");  putsUart0(buffer);  putsUart0("\r\n");
 
     	dmxTxDEN = 0;
+    	waitMicrosecond(100);	// Stabilization time
+
+    	poll_receive=false;
     	disableU1TxINT();
     	enableU1RxINT();
-    	while(1);
+
+    	while(1)
+    	{
+    		deviceAdd = readDevAdd();
+    		if(poll_receive)
+    		{
+    			if(readPollData(deviceAdd))
+    			{
+    				putcUart0('1');
+    				dmxTxDEN = 1; 			  // DMX Write On
+					waitMicrosecond(1);		  // Give time to properly convert from read to write mode
+					brkFunc();				  // Send Break
+					while(U1_TX_BUSY);
+
+					UART1_IBRD_R = 10;        // Increase the Baud Rate (250Kbps)
+					UART1_LCRH_R = UART_LCRH_WLEN_8 | UART_LCRH_STP2;
+					// Everytime we change baudrate we must write to LCRH
+					// Configure for 8N2 w/ 1-level FIFO
+
+					//redTimeout = 250;		  // Set RED LED, indicate break is sent
+					//LATBbits.LATB5 = 1;
+					dmxTxDEN = 0; 				// DMX Read On
+    			}
+    			else
+    				putcUart0('0');
+    			poll_receive = false;
+    			enableU1RxINT();
+
+    		}
+    	}
 
     }
 

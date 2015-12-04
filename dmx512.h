@@ -26,8 +26,6 @@ Devices used: UART1
 extern volatile unsigned char dmxData[513];
 extern int maxDmxAddr;
 extern volatile int txPhase;
-extern volatile int rxPhase;
-
 
 #define pollStartByte 0xF0				// Start code for POLL
 #define dataStartByte 0x00				// Start code for normal data
@@ -41,7 +39,7 @@ extern volatile int rxPhase;
 /*********************************************
 * Read the 9 pin dip switch as device address
 *********************************************/
-unsigned int readDevAdd();
+int readDevAdd();
 
 /*********************************************
 * Read the 10th dip switch for device mode
@@ -71,8 +69,10 @@ void brkFunc();
 void sendStartByte(char);
 
 
-
-void dmxTxOn(void);
-void dmxTxOff(void);
+/********************************************
+* Read all 512 poll data (Blocking function)
+* Return: Device address's data (true/false)
+********************************************/
+bool readPollData(int);
 
 #endif /* DMX512_H_ */

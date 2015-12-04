@@ -84,7 +84,7 @@ void enableU1RxINT()
 //****************************//
 void disableU1RxINT()
 {
-	UART1_IM_R &= ~(UART_IM_RXIM | UART_IM_FEIM); // turn-on U1TX interrupt
+	UART1_IM_R &= ~(UART_IM_RXIM | UART_IM_FEIM); // turn-off U1RX interrupt
 }
 
 //***********************************************************************************//

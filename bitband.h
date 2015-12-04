@@ -37,15 +37,17 @@ Target uC	: TM4C123GH6PM
 #define DEV_ADD8  	 	(*((volatile uint32_t *)(0x42000000 + (0x400073FC-0x40000000)*32 + 6*4))) //PD6
 
 
-#define DEV_MODE  	 	(*((volatile uint32_t *)(0x42000000 + (0x400063FC-0x40000000)*32 + 7*4))) //PC7
-#define U1_TX_INT_FLAG  (*((volatile uint32_t *)(0x42000000 + (0x4000D044-0x40000000)*32 + 5*4))) //UARTICR TXIC bit
-#define U1_FR_INT_FLAG  (*((volatile uint32_t *)(0x42000000 + (0x4000D044-0x40000000)*32 + 7*4))) //UARTICR FEIC bit
-#define U1_TX_BUSY 	 	(*((volatile uint32_t *)(0x42000000 + (0x4000D018-0x40000000)*32 + 3*4))) //UART Flag register's bit 3 (Tx Busy)
-#define U1_TX_INT		(*((volatile uint32_t *)(0x42000000 + (0x4000D040-0x40000000)*32 + 5*4))) //UARTMIS TXMIS bit
-#define U1_RX_INT 	 	(*((volatile uint32_t *)(0x42000000 + (0x4000D040-0x40000000)*32 + 4*4))) //UARTMIS RXMIS bit
-#define U1_FRAME_INT 	(*((volatile uint32_t *)(0x42000000 + (0x4000D040-0x40000000)*32 + 7*4))) //UARTMIS FEMIS bit
+#define DEV_MODE  	 		(*((volatile uint32_t *)(0x42000000 + (0x400063FC-0x40000000)*32 + 7*4))) //PC7
+#define U1_TX_INT_FLAG  	(*((volatile uint32_t *)(0x42000000 + (0x4000D044-0x40000000)*32 + 5*4))) //UARTICR TXIC bit
+#define U1_FRAME_INT_FLAG  	(*((volatile uint32_t *)(0x42000000 + (0x4000D044-0x40000000)*32 + 7*4))) //UARTICR FEIC bit
+#define U1_FRAME_INT 		(*((volatile uint32_t *)(0x42000000 + (0x4000D040-0x40000000)*32 + 7*4))) //UARTMIS FEMIS bit
+#define U1_RX_INT 	 		(*((volatile uint32_t *)(0x42000000 + (0x4000D040-0x40000000)*32 + 4*4))) //UARTMIS RXMIS bit
+#define U1_TX_INT			(*((volatile uint32_t *)(0x42000000 + (0x4000D040-0x40000000)*32 + 5*4))) //UARTMIS TXMIS bit
 
+#define U1_TX_BUSY 	 		(*((volatile uint32_t *)(0x42000000 + (0x4000D018-0x40000000)*32 + 3*4))) //UARTFR  BUSY bit (Tx Busy)
+#define U1_RX_EMPTY 	 	(*((volatile uint32_t *)(0x42000000 + (0x4000D018-0x40000000)*32 + 4*4))) //UARTFR 	RXFE bit
 
+#define U1_FRAME_STATUS 	(*((volatile uint32_t *)(0x42000000 + (0x4000D004-0x40000000)*32 + 0*4))) //UARTRSR	FE bit
 
 #define dmxTxDEN  	 (*((volatile uint32_t *)(0x42000000 + (0x400063FC-0x40000000)*32 + 6*4))) //PC6 ->RX485 Tx Enable pin
 
